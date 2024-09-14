@@ -201,6 +201,11 @@ const App: React.FC = () => {
             </TableContainer>
           )}
         </Box>
+                <Box sx={{ mt: 4, mb: 2, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Made in Poland with ❤️
+          </Typography>
+        </Box>
       </Container>
     </LocalizationProvider>
   );
