@@ -14,18 +14,17 @@ import {
   TableRow,
   Select,
   MenuItem,
-  SelectChangeEvent
+  SelectChangeEvent,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
-
-interface CostBreakdown {
-  electricityCost: number;
-  filamentCost: number;
-  depreciationCost: number;
-  totalCost: number;
-}
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import TimeInput from './TimeInput';
+import { calculatePrintCost, CostBreakdown } from './costCalculations';
 
 const App: React.FC = () => {
-  const [printTime, setPrintTime] = useState<string>('');
+  const [printTime, setPrintTime] = useState<{ hours: number; minutes: number }>({ hours: 0, minutes: 0 });
   const [filamentWeight, setFilamentWeight] = useState<string>('');
   const [electricityCost, setElectricityCost] = useState<string>('1.36');
   const [printerPower, setPrinterPower] = useState<string>('0.200');
@@ -33,44 +32,35 @@ const App: React.FC = () => {
   const [costs, setCosts] = useState<CostBreakdown | null>(null);
   const [error, setError] = useState<string>('');
   const [currency, setCurrency] = useState<string>('PLN');
-
+  const [showDepreciation, setShowDepreciation] = useState<boolean>(false);
+  const [printerCost, setPrinterCost] = useState<string>('2800');
+  const [printerLifespan, setPrinterLifespan] = useState<string>('5');
   const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: ChangeEvent<HTMLInputElement>) => {
     setter(e.target.value);
   };
 
-  const parseTime = (timeStr: string): number => {
-    const match = timeStr.match(/(?:(\d+)h)?(?:(\d+)m)?/);
-    if (!match) {
-      throw new Error("Invalid time format. Please use the format 'XhYm', e.g., '4h30m' or '45m'.");
-    }
-    const hours = parseInt(match[1] || '0', 10);
-    const minutes = parseInt(match[2] || '0', 10);
-    return hours * 60 + minutes;
-  };
-
-  const calculatePrintCost = (printTimeMinutes: number, filamentWeightGrams: number): CostBreakdown => {
-    const printTimeHours = printTimeMinutes / 60;
-    const electricityCostValue = parseFloat(electricityCost);
-    const printerPowerValue = parseFloat(printerPower);
-    const filamentCostValue = parseFloat(filamentCost);
-
-    const electricityCostResult = printTimeHours * printerPowerValue * electricityCostValue;
-    const filamentCostResult = (filamentWeightGrams / 1000) * filamentCostValue;
-    const depreciationCost = 0;
-    const totalCost = electricityCostResult + filamentCostResult + depreciationCost;
-
-    return { electricityCost: electricityCostResult, filamentCost: filamentCostResult, depreciationCost, totalCost };
+  const handlePrintTimeChange = (newValue: { hours: number; minutes: number }) => {
+    setPrintTime(newValue);
   };
 
   const handleCalculate = () => {
     setError('');
     try {
-      const timeInMinutes = parseTime(printTime);
+      const timeInMinutes = printTime.hours * 60 + printTime.minutes;
       const weight = parseFloat(filamentWeight);
       if (isNaN(weight)) {
         throw new Error("Invalid filament weight. Please enter a number.");
       }
-      const calculatedCosts = calculatePrintCost(timeInMinutes, weight);
+      const calculatedCosts = calculatePrintCost(
+        timeInMinutes,
+        weight,
+        parseFloat(electricityCost),
+        parseFloat(printerPower),
+        parseFloat(filamentCost),
+        showDepreciation,
+        parseFloat(printerCost),
+        parseFloat(printerLifespan)
+      );
       setCosts(calculatedCosts);
     } catch (err) {
       if (err instanceof Error) {
@@ -80,106 +70,139 @@ const App: React.FC = () => {
       }
     }
   };
-
   const handleCurrencyChange = (event: SelectChangeEvent) => {
     setCurrency(event.target.value as string);
   };
 
+  const handleShowDepreciationChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setShowDepreciation(event.target.checked);
+  };
+
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Cost Slicer: 3D Print Cost Calculator
-        </Typography>
-        <TextField
-          fullWidth
-          label="Projected Model Print Time (e.g., 4h30m)"
-          value={printTime}
-          onChange={handleInputChange(setPrintTime)}
-          margin="normal"
-        />
-        <TextField
-          fullWidth
-          label="Projected Print Filament Weight (grams)"
-          type="number"
-          value={filamentWeight}
-          onChange={handleInputChange(setFilamentWeight)}
-          margin="normal"
-        />
-        <TextField
-          fullWidth
-          label="Electricity Cost (per kWh)"
-          type="number"
-          value={electricityCost}
-          onChange={handleInputChange(setElectricityCost)}
-          margin="normal"
-        />
-        <TextField
-          fullWidth
-          label="Printer Power Consumption (kW)"
-          type="number"
-          value={printerPower}
-          onChange={handleInputChange(setPrinterPower)}
-          margin="normal"
-        />
-        <TextField
-          fullWidth
-          label="Filament Cost (per kg)"
-          type="number"
-          value={filamentCost}
-          onChange={handleInputChange(setFilamentCost)}
-          margin="normal"
-        />
-        <Select
-          value={currency}
-          onChange={handleCurrencyChange}
-          fullWidth
-          sx={{ mt: 2 }}
-        >
-          <MenuItem value="PLN">PLN</MenuItem>
-          <MenuItem value="USD">USD</MenuItem>
-          <MenuItem value="EUR">EUR</MenuItem>
-        </Select>
-        <Button variant="contained" onClick={handleCalculate} sx={{ mt: 2 }}>
-          Slice Costs
-        </Button>
-        {error && (
-          <Typography color="error" sx={{ mt: 2 }}>
-            {error}
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Container maxWidth="sm">
+        <Box sx={{ my: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Cost Slicer: 3D Print Cost Calculator
           </Typography>
-        )}
-        {costs && (
-          <TableContainer component={Paper} sx={{ mt: 4 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Cost Type</TableCell>
-                  <TableCell align="right">Amount ({currency})</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  <TableCell>Electricity Cost</TableCell>
-                  <TableCell align="right">{costs.electricityCost.toFixed(2)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Filament Cost</TableCell>
-                  <TableCell align="right">{costs.filamentCost.toFixed(2)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Printer Depreciation</TableCell>
-                  <TableCell align="right">{costs.depreciationCost.toFixed(2)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell><strong>Total Cost</strong></TableCell>
-                  <TableCell align="right"><strong>{costs.totalCost.toFixed(2)}</strong></TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </Box>
-    </Container>
+            <TimeInput value={printTime} onChange={handlePrintTimeChange} />
+
+          <TextField
+            fullWidth
+            label="Projected Total Print Filament Weight (grams)"
+            type="number"
+            value={filamentWeight}
+            onChange={handleInputChange(setFilamentWeight)}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Electricity Cost (per kWh)"
+            type="number"
+            value={electricityCost}
+            onChange={handleInputChange(setElectricityCost)}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Printer Power Consumption (kW)"
+            type="number"
+            value={printerPower}
+            onChange={handleInputChange(setPrinterPower)}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Filament Cost (per kg)"
+            type="number"
+            value={filamentCost}
+            onChange={handleInputChange(setFilamentCost)}
+            margin="normal"
+          />
+          <Select
+            value={currency}
+            onChange={handleCurrencyChange}
+            fullWidth
+            sx={{ mt: 2 }}
+          >
+            <MenuItem value="PLN">PLN</MenuItem>
+            <MenuItem value="USD">USD</MenuItem>
+            <MenuItem value="EUR">EUR</MenuItem>
+          </Select>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showDepreciation}
+                onChange={handleShowDepreciationChange}
+                color="primary"
+              />
+            }
+            label="Include Printer Depreciation"
+            sx={{ mt: 2 }}
+          />
+          {showDepreciation && (
+            <>
+              <TextField
+                fullWidth
+                label="Printer Cost"
+                type="number"
+                value={printerCost}
+                onChange={handleInputChange(setPrinterCost)}
+                margin="normal"
+              />
+              <TextField
+                fullWidth
+                label="Printer Lifespan (years)"
+                type="number"
+                value={printerLifespan}
+                onChange={handleInputChange(setPrinterLifespan)}
+                margin="normal"
+              />
+            </>
+          )}
+          <Button variant="contained" onClick={handleCalculate} sx={{ mt: 2 }}>
+            Slice Costs
+          </Button>
+          {error && (
+            <Typography color="error" sx={{ mt: 2 }}>
+              {error}
+            </Typography>
+          )}
+          {costs && (
+            <TableContainer component={Paper} sx={{ mt: 4 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Cost Type</TableCell>
+                    <TableCell align="right">Amount ({currency})</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>Electricity Cost</TableCell>
+                    <TableCell align="right">{costs.electricityCost.toFixed(2)}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Filament Cost</TableCell>
+                    <TableCell align="right">{costs.filamentCost.toFixed(2)}</TableCell>
+                  </TableRow>
+                  {showDepreciation && (
+                    <TableRow>
+                      <TableCell>Printer Depreciation</TableCell>
+                      <TableCell align="right">{costs.depreciationCost.toFixed(2)}</TableCell>
+                    </TableRow>
+                  )}
+                  <TableRow>
+                    <TableCell><strong>Total Cost</strong></TableCell>
+                    <TableCell align="right"><strong>{costs.totalCost.toFixed(2)}</strong></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Box>
+      </Container>
+    </LocalizationProvider>
   );
 }
 
