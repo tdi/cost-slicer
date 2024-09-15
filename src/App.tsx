@@ -22,6 +22,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import TimeInput from './TimeInput';
 import { calculatePrintCost, CostBreakdown } from './costCalculations';
+import { Analytics } from "@vercel/analytics/react"
 
 const App: React.FC = () => {
   const [printTime, setPrintTime] = useState<{ hours: number; minutes: number }>({ hours: 0, minutes: 0 });
@@ -79,6 +80,7 @@ const App: React.FC = () => {
   };
 
   return (
+
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Container maxWidth="sm">
         <Box sx={{ my: 4 }}>
@@ -207,6 +209,7 @@ const App: React.FC = () => {
           </Typography>
         </Box>
       </Container>
+      <Analytics />
     </LocalizationProvider>
   );
 }
