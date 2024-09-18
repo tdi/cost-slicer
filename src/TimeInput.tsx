@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, Box, Typography } from '@mui/material';
+import { TextField, Box, InputAdornment } from '@mui/material';
 
 interface TimeInputProps {
   value: { hours: number; minutes: number };
@@ -19,23 +19,28 @@ const TimeInput: React.FC<TimeInputProps> = ({ value, onChange }) => {
 
   return (
     <Box>
-      <Typography variant="subtitle1" gutterBottom>
-        Projected Total Print Time
-      </Typography>
       <Box display="flex" gap={2}>
         <TextField
-          label="Hours"
+            fullWidth
+          label="HH"
           type="number"
           value={value.hours || ''}
           onChange={handleHoursChange}
           inputProps={{ min: 0 }}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">hours</InputAdornment>,
+          }}
         />
         <TextField
-          label="Minutes"
+            fullWidth
+          label="MM"
           type="number"
           value={value.minutes || ''}
           onChange={handleMinutesChange}
           inputProps={{ min: 0 }}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">minutes</InputAdornment>,
+          }}
         />
       </Box>
     </Box>
