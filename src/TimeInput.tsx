@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, Box, Typography, InputAdornment } from '@mui/material';
+import { TextField, Box, InputAdornment } from '@mui/material';
 
 interface TimeInputProps {
   value: { hours: number; minutes: number };
