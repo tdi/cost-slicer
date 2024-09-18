@@ -100,7 +100,6 @@ const App: React.FC = () => {
     return (
 
         <ThemeProvider theme={theme}>
-
             <CssBaseline/>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <Container maxWidth="sm" component={Paper} elevation={3}>
@@ -286,7 +285,7 @@ const App: React.FC = () => {
                 </Box>
                 <Analytics/>
             </LocalizationProvider>
-        </ThemeProvider>
+         </ThemeProvider>
     );
 }
 
