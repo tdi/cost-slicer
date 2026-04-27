@@ -150,7 +150,7 @@ Single-column, max-width `md` (was `sm`), responsive padding. Top to bottom:
 
 ### 4.2 Visual / theme
 
-- Single primary accent (warm orange `#E4572E` or similar — to be finalized in implementation; keep it tokenized in `theme.ts`).
+- Single primary accent: terracotta `#D97757`, tokenized in `theme.ts`. Neutral grays elsewhere; no secondary accent. Verified for AA contrast on both light and dark backgrounds.
 - Typography: keep Roboto, but title uses display weight; field labels use MUI floating labels (drop the inline `subtitle1` headings).
 - Cards: `Paper` with `elevation={1}`, rounded corners (`borderRadius: 12`), generous padding.
 - Dark mode: keep `prefers-color-scheme` reactivity; verify accent contrast in both modes.
@@ -177,7 +177,7 @@ On mount, `useEffect` reads `cost-slicer:settings:v1` and dispatches `{type: "hy
 - `<html lang="en">`.
 - `<title>Cost Slicer — 3D Print Cost Calculator</title>`.
 - `<meta name="description" content="Estimate the real cost of any 3D print in seconds. Drop a G-code file and get electricity, filament, and depreciation costs.">`.
-- `<link rel="canonical" href="https://cost-slicer.vercel.app/">` (final URL set at implementation time).
+- `<link rel="canonical" href="https://cost-slicer.vercel.app/">`.
 - Open Graph: `og:title`, `og:description`, `og:image` (`/og-image.png`, 1200×630), `og:url`, `og:type=website`, `og:locale=en_US`.
 - Twitter: `twitter:card=summary_large_image`, `twitter:title`, `twitter:description`, `twitter:image`.
 - `<meta name="theme-color">` matching brand accent.
@@ -267,5 +267,4 @@ The detailed plan with task-sized steps will be produced by `writing-plans` next
 
 - **Cura weight estimation accuracy** — density-based estimate can be off by a few percent. Mitigation: clearly flag as estimated and let the user override.
 - **Slicer comment drift** — slicer vendors change comment formats between versions. Mitigation: profiles are isolated and easy to add patterns to; tests pin behavior.
-- **Final brand accent color and OG image** — to be picked during implementation; not a blocker for the spec.
-- **Production canonical URL** — confirm before shipping (placeholder `cost-slicer.vercel.app`).
+- **OG image artwork** — to be designed during implementation (1200×630, brand accent, app name + tagline).
