@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { Box, Button, Chip, Link, Paper, Typography } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { parseGcode } from '../gcode/gcodeParser';
+import { parse3mf } from '../gcode/threemfParser';
 import { ParsedJob, ParseError } from '../gcode/types';
 
 interface ImportedSummary {
@@ -19,26 +20,44 @@ interface Props {
   onClearImport?: () => void;
 }
 
-const SUPPORTED_LABEL = 'PrusaSlicer · OrcaSlicer · BambuStudio · SuperSlicer · Cura';
+const SUPPORTED_LABEL = 'PrusaSlicer · OrcaSlicer · BambuStudio · SuperSlicer · Cura · .3mf';
+
+const is3mf = (file: File) => file.name.toLowerCase().endsWith('.3mf');
+
+const readAsArrayBuffer = (file: File): Promise<ArrayBuffer> => {
+  if (typeof file.arrayBuffer === 'function') return file.arrayBuffer();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+};
+
+const readAsText = (file: File): Promise<string> => {
+  if (typeof file.text === 'function') return file.text();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+};
 
 const FileDropZone = ({ onImport, onError, imported, onClearImport }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
-  const readFileAsText = (file: File): Promise<string> => {
-    if (typeof file.text === 'function') return file.text();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result ?? ''));
-      reader.onerror = () => reject(reader.error);
-      reader.readAsText(file);
-    });
-  };
-
   const handleFile = useCallback(async (file: File) => {
     try {
-      const text = await readFileAsText(file);
-      const result = parseGcode(text);
+      let result: ParsedJob | ParseError;
+      if (is3mf(file)) {
+        const buf = await readAsArrayBuffer(file);
+        result = await parse3mf(buf);
+      } else {
+        const text = await readAsText(file);
+        result = parseGcode(text);
+      }
       if ('kind' in result) onError(result);
       else onImport(result);
     } catch {
@@ -87,7 +106,7 @@ const FileDropZone = ({ onImport, onError, imported, onClearImport }: Props) => 
       onClick={() => inputRef.current?.click()}
     >
       <UploadFileIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-      <Typography variant="h6" sx={{ mt: 1 }}>Drop a .gcode file</Typography>
+      <Typography variant="h6" sx={{ mt: 1 }}>Drop a .gcode or .3mf file</Typography>
       <Typography variant="body2" color="text.secondary">or click to browse</Typography>
       <Box sx={{ mt: 2 }}>
         <Button variant="outlined" size="small" onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}>
@@ -101,7 +120,7 @@ const FileDropZone = ({ onImport, onError, imported, onClearImport }: Props) => 
         ref={inputRef}
         type="file"
         aria-label="g-code file input"
-        accept=".gcode,.gco,.g,text/plain"
+        accept=".gcode,.gco,.g,.3mf,text/plain,application/octet-stream"
         style={{ display: 'none' }}
         onChange={onChange}
       />
