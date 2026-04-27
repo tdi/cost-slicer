@@ -55,11 +55,17 @@ test('parses .3mf file and calls onImport', async () => {
   render(<FileDropZone onImport={onImport} onError={onError} />);
 
   const zip = new JSZip();
-  zip.file('Metadata/slice_info.config', JSON.stringify({
-    plate: [{ index: '1', prediction: '3600', weight: ['25.0'] }],
-  }));
+  zip.file('Metadata/slice_info.config', `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+  <plate>
+    <metadata key="index" value="1"/>
+    <metadata key="prediction" value="3600"/>
+    <metadata key="weight" value="25.0"/>
+    <filament id="1" type="PLA" used_g="25.0" />
+  </plate>
+</config>`);
   zip.file('Metadata/project_settings.config', JSON.stringify({
-    machine_type: 'Bambu Lab X1 Carbon',
+    printer_settings_id: 'Bambu Lab X1 Carbon 0.4 nozzle',
     filament_type: ['PLA'],
   }));
   const buf = await zip.generateAsync({ type: 'arraybuffer' });

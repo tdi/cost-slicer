@@ -1,17 +1,8 @@
 import JSZip from 'jszip';
 import { ParsedJob, ParseError } from './types';
 
-interface SliceInfoPlate {
-  index?: string;
-  prediction?: string;
-  weight?: string[];
-}
-
-interface SliceInfo {
-  plate?: SliceInfoPlate[];
-}
-
 interface ProjectSettings {
+  printer_settings_id?: string;
   machine_type?: string;
   printer_model_id?: string;
   filament_type?: string[];
@@ -21,6 +12,9 @@ const toHM = (totalSeconds: number) => {
   const mins = Math.floor(totalSeconds / 60);
   return { hours: Math.floor(mins / 60), minutes: mins % 60 };
 };
+
+const metaValue = (plate: Element, key: string): string | null =>
+  plate.querySelector(`metadata[key="${key}"]`)?.getAttribute('value') ?? null;
 
 export async function parse3mf(buffer: ArrayBuffer): Promise<ParsedJob | ParseError> {
   let zip: JSZip;
@@ -38,14 +32,15 @@ export async function parse3mf(buffer: ArrayBuffer): Promise<ParsedJob | ParseEr
     };
   }
 
-  let sliceInfo: SliceInfo;
-  try {
-    sliceInfo = JSON.parse(await sliceInfoFile.async('string'));
-  } catch {
+  // slice_info.config is XML (not JSON)
+  const xmlText = await sliceInfoFile.async('string');
+  const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+  if (doc.querySelector('parsererror')) {
     return { kind: 'read_failed', message: 'Could not parse slice_info.config inside the .3mf.' };
   }
 
-  if (!sliceInfo.plate || sliceInfo.plate.length === 0) {
+  const plates = Array.from(doc.querySelectorAll('plate'));
+  if (plates.length === 0) {
     return {
       kind: 'not_sliced',
       message: 'This .3mf has no sliced plates. Slice it in BambuStudio first.',
@@ -54,22 +49,36 @@ export async function parse3mf(buffer: ArrayBuffer): Promise<ParsedJob | ParseEr
 
   let totalSeconds = 0;
   let totalWeight = 0;
-  for (const plate of sliceInfo.plate) {
-    totalSeconds += parseFloat(plate.prediction ?? '0') || 0;
-    for (const w of plate.weight ?? []) {
-      totalWeight += parseFloat(w) || 0;
+  let filamentType: string | null = null;
+
+  for (const plate of plates) {
+    totalSeconds += parseFloat(metaValue(plate, 'prediction') ?? '0') || 0;
+
+    const plateWeight = metaValue(plate, 'weight');
+    if (plateWeight != null) {
+      totalWeight += parseFloat(plateWeight) || 0;
+    } else {
+      // Fallback: sum per-filament used_g attributes
+      plate.querySelectorAll('filament').forEach(f => {
+        totalWeight += parseFloat(f.getAttribute('used_g') ?? '0') || 0;
+      });
+    }
+
+    if (!filamentType) {
+      filamentType = plate.querySelector('filament')?.getAttribute('type') ?? null;
     }
   }
 
+  // Printer name from project_settings.config (JSON)
   let printerModel: string | null = null;
-  let filamentType: string | null = null;
-
   const settingsFile = zip.file('Metadata/project_settings.config');
   if (settingsFile) {
     try {
       const settings: ProjectSettings = JSON.parse(await settingsFile.async('string'));
-      printerModel = settings.machine_type ?? settings.printer_model_id ?? null;
-      filamentType = settings.filament_type?.[0] ?? null;
+      // printer_settings_id e.g. "Bambu Lab X1 Carbon 0.4 nozzle" — strip nozzle suffix
+      const raw = settings.printer_settings_id ?? settings.machine_type ?? settings.printer_model_id ?? null;
+      printerModel = raw ? raw.replace(/\s+\d+\.?\d*\s*nozzle$/i, '').trim() : null;
+      if (!filamentType) filamentType = settings.filament_type?.[0] ?? null;
     } catch {
       // non-fatal
     }
