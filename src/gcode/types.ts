@@ -8,6 +8,7 @@ export interface ParsedJob {
   filamentWeightEstimated: boolean;
   filamentType: string | null;
   printerModel: string | null;
+  thumbnailDataUrl: string | null;
 }
 
 export type ParseErrorKind =

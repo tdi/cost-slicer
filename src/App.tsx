@@ -84,6 +84,7 @@ const App = () => {
     filamentType: state.filamentType,
     grams: parseFloat(state.filamentWeight) || null,
     hoursLabel: `${state.printTime.hours}h ${state.printTime.minutes}m`,
+    thumbnailDataUrl: state.thumbnailDataUrl,
   } : null;
 
   const dynamicTitle = state.importSource && state.printerModel

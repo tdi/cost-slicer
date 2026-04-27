@@ -15,6 +15,7 @@ export interface FormState {
   printerCost: string;
   printerLifespan: string;
   importSource: SlicerFlavor | null;
+  thumbnailDataUrl: string | null;
 }
 
 export const initialState: FormState = {
@@ -31,6 +32,7 @@ export const initialState: FormState = {
   printerCost: '2800',
   printerLifespan: '5',
   importSource: null,
+  thumbnailDataUrl: null,
 };
 
 export type FormAction =
@@ -60,6 +62,7 @@ export function formReducer(state: FormState, action: FormAction): FormState {
         filamentType: action.payload.filamentType,
         printerModel: action.payload.printerModel,
         importSource: action.payload.flavor,
+        thumbnailDataUrl: action.payload.thumbnailDataUrl,
       };
     case 'clearImport':
       return {
@@ -70,6 +73,7 @@ export function formReducer(state: FormState, action: FormAction): FormState {
         printerModel: null,
         filamentWeightEstimated: false,
         importSource: null,
+        thumbnailDataUrl: null,
       };
   }
 }

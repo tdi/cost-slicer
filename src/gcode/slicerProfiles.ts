@@ -50,6 +50,7 @@ const prusaLike = (flavor: SlicerFlavor, signature: RegExp): SlicerProfile => ({
       filamentWeightEstimated: false,
       filamentType: type ? type.split(/[;,]/)[0].trim() : null,
       printerModel: printer,
+      thumbnailDataUrl: null,
     };
   },
 });
@@ -69,6 +70,7 @@ const bambu: SlicerProfile = {
       filamentWeightEstimated: false,
       filamentType: type ? stripQuotes(type.split(/[;,]/)[0].trim()) : null,
       printerModel: printer,
+      thumbnailDataUrl: null,
     };
   },
 };
@@ -104,6 +106,7 @@ const cura: SlicerProfile = {
       filamentWeightEstimated: estimated,
       filamentType: type ? type.trim() : null,
       printerModel: printer,
+      thumbnailDataUrl: null,
     };
   },
 };

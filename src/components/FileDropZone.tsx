@@ -11,6 +11,7 @@ interface ImportedSummary {
   filamentType: string | null;
   grams: number | null;
   hoursLabel: string | null;
+  thumbnailDataUrl?: string | null;
 }
 
 interface Props {
@@ -81,6 +82,14 @@ const FileDropZone = ({ onImport, onError, imported, onClearImport }: Props) => 
   if (imported) {
     return (
       <Paper sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+        {imported.thumbnailDataUrl && (
+          <Box
+            component="img"
+            src={imported.thumbnailDataUrl}
+            alt={`${imported.source} preview`}
+            sx={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 1, bgcolor: 'action.hover' }}
+          />
+        )}
         <Chip label={imported.source} color="primary" size="small" />
         <Typography variant="body2" sx={{ flex: 1 }}>
           {[imported.printer, imported.hoursLabel, imported.grams != null ? `${imported.grams.toFixed(1)} g` : null, imported.filamentType]

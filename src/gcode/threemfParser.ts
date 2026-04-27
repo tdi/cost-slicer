@@ -69,6 +69,19 @@ export async function parse3mf(buffer: ArrayBuffer): Promise<ParsedJob | ParseEr
     }
   }
 
+  // Thumbnail: BambuStudio writes plate_1.png (and plate_no_light_1.png) — pick the first non-empty one
+  let thumbnailDataUrl: string | null = null;
+  const thumbCandidates = ['Metadata/plate_1.png', 'Metadata/top_1.png', 'Metadata/plate_no_light_1.png'];
+  for (const path of thumbCandidates) {
+    const f = zip.file(path);
+    if (f) {
+      try {
+        const b64 = await f.async('base64');
+        if (b64) { thumbnailDataUrl = `data:image/png;base64,${b64}`; break; }
+      } catch { /* ignore */ }
+    }
+  }
+
   // Printer name from project_settings.config (JSON)
   let printerModel: string | null = null;
   const settingsFile = zip.file('Metadata/project_settings.config');
@@ -91,5 +104,6 @@ export async function parse3mf(buffer: ArrayBuffer): Promise<ParsedJob | ParseEr
     filamentWeightEstimated: false,
     filamentType,
     printerModel,
+    thumbnailDataUrl,
   };
 }

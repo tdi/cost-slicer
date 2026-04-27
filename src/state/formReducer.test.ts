@@ -30,6 +30,7 @@ describe('formReducer', () => {
         filamentWeightEstimated: false,
         filamentType: 'PLA',
         printerModel: 'MK4',
+        thumbnailDataUrl: null,
       },
     });
     expect(next.printTime).toEqual({ hours: 1, minutes: 23 });
@@ -42,7 +43,7 @@ describe('formReducer', () => {
   it('clearImport resets job-only fields', () => {
     const imported = formReducer(initialState, {
       type: 'import',
-      payload: { flavor: 'PrusaSlicer', printTime: { hours: 1, minutes: 0 }, filamentWeightGrams: 10, filamentWeightEstimated: false, filamentType: null, printerModel: null },
+      payload: { flavor: 'PrusaSlicer', printTime: { hours: 1, minutes: 0 }, filamentWeightGrams: 10, filamentWeightEstimated: false, filamentType: null, printerModel: null, thumbnailDataUrl: null },
     });
     const cleared = formReducer(imported, { type: 'clearImport' });
     expect(cleared.importSource).toBeNull();
