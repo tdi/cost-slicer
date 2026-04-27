@@ -1,41 +1,27 @@
-import { createTheme } from '@mui/material/styles';
-import { PaletteMode } from '@mui/material';
+import { createTheme, ThemeOptions } from '@mui/material/styles';
 
-export const getTheme = (mode: PaletteMode) => createTheme({
+const ACCENT = '#D97757';
+const ACCENT_DARK = '#B85F44';
+
+export const buildTheme = (mode: 'light' | 'dark'): ThemeOptions => ({
   palette: {
     mode,
-    primary: {
-      main: mode === 'light' ? '#3f51b5' : '#90caf9',
-    },
-    secondary: {
-      main: mode === 'light' ? '#f50057' : '#f48fb1',
-    },
-    background: {
-      default: mode === 'light' ? '#f5f5f5' : '#303030',
-      paper: mode === 'light' ? '#ffffff' : '#424242',
-    },
+    primary: { main: mode === 'dark' ? ACCENT_DARK : ACCENT, contrastText: '#ffffff' },
+    background: mode === 'dark'
+      ? { default: '#121212', paper: '#1c1c1c' }
+      : { default: '#fafaf7', paper: '#ffffff' },
   },
+  shape: { borderRadius: 12 },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h4: {
-      fontWeight: 600,
-    },
+    h1: { fontSize: '2.25rem', fontWeight: 700, letterSpacing: '-0.02em' },
+    h2: { fontSize: '1.25rem', fontWeight: 600 },
+    button: { textTransform: 'none', fontWeight: 600 },
   },
   components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 3px 5px 2px rgba(0, 0, 0, .1)',
-        },
-      },
-    },
+    MuiPaper: { defaultProps: { elevation: 1 } },
+    MuiButton: { styleOverrides: { root: { borderRadius: 10 } } },
+    MuiTextField: { defaultProps: { variant: 'outlined', size: 'small' } },
   },
 });
+
+export const themeForMode = (mode: 'light' | 'dark') => createTheme(buildTheme(mode));
