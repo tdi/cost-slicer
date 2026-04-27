@@ -46,6 +46,7 @@ const SettingsCard = (p: Props) => {
               <MenuItem value="PLN">PLN</MenuItem>
               <MenuItem value="USD">USD</MenuItem>
               <MenuItem value="EUR">EUR</MenuItem>
+              <MenuItem value="GBP">GBP</MenuItem>
             </Select>
           </Stack>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>

@@ -1,7 +1,7 @@
 export const SETTINGS_KEY = 'cost-slicer:settings:v1';
 const VERSION = 1;
 
-export type Currency = 'PLN' | 'USD' | 'EUR';
+export type Currency = 'PLN' | 'USD' | 'EUR' | 'GBP';
 
 export interface PersistedSettings {
   electricityCost: string;

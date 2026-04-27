@@ -11,7 +11,7 @@ export interface ParsedJob {
 }
 
 export type ParseErrorKind =
-  | 'unsupported_slicer' | 'empty_file' | 'too_large' | 'read_failed';
+  | 'unsupported_slicer' | 'empty_file' | 'too_large' | 'read_failed' | 'not_sliced';
 
 export interface ParseError {
   kind: ParseErrorKind;
