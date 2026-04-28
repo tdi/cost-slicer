@@ -59,9 +59,10 @@ export async function parse3mf(buffer: ArrayBuffer): Promise<ParsedJob | ParseEr
       totalWeight += parseFloat(plateWeight) || 0;
     } else {
       // Fallback: sum per-filament used_g attributes
-      plate.querySelectorAll('filament').forEach(f => {
-        totalWeight += parseFloat(f.getAttribute('used_g') ?? '0') || 0;
-      });
+      const filaments = plate.querySelectorAll('filament');
+      for (let i = 0; i < filaments.length; i++) {
+        totalWeight += parseFloat(filaments[i].getAttribute('used_g') ?? '0') || 0;
+      }
     }
 
     if (!filamentType) {
