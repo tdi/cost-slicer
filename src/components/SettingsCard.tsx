@@ -1,11 +1,12 @@
-import { ChangeEvent, useState } from 'react';
+import { useState } from 'react';
 import {
-  Box, Collapse, FormControlLabel, IconButton, InputAdornment, MenuItem, Paper,
-  Select, SelectChangeEvent, Stack, Switch, TextField, Typography,
+  Box, Collapse, FormControlLabel, IconButton, Paper, Stack, Switch,
+  ToggleButton, ToggleButtonGroup, Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Currency } from '../lib/persistence';
+import NumberField from './NumberField';
 
 interface Props {
   currency: Currency;
@@ -25,11 +26,10 @@ interface Props {
   startCollapsed?: boolean;
 }
 
+const CURRENCIES: Currency[] = ['PLN', 'USD', 'EUR', 'GBP'];
+
 const SettingsCard = (p: Props) => {
   const [open, setOpen] = useState(!p.startCollapsed);
-
-  const onText = (setter: (v: string) => void) =>
-    (e: ChangeEvent<HTMLInputElement>) => setter(e.target.value);
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -41,34 +41,68 @@ const SettingsCard = (p: Props) => {
       </Box>
       <Collapse in={open}>
         <Box sx={{ mt: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">Currency</Typography>
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={p.currency}
+              onChange={(_, v) => v && p.onCurrencyChange(v as Currency)}
+              aria-label="currency"
+            >
+              {CURRENCIES.map(c => (
+                <ToggleButton key={c} value={c} sx={{ px: 1.75, fontWeight: 600, letterSpacing: '0.04em' }}>{c}</ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </Box>
+
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Select fullWidth size="small" value={p.currency} onChange={(e: SelectChangeEvent) => p.onCurrencyChange(e.target.value as Currency)}>
-              <MenuItem value="PLN">PLN</MenuItem>
-              <MenuItem value="USD">USD</MenuItem>
-              <MenuItem value="EUR">EUR</MenuItem>
-              <MenuItem value="GBP">GBP</MenuItem>
-            </Select>
+            <NumberField
+              fullWidth
+              label="Electricity rate"
+              value={p.electricityCost}
+              onChange={p.onElectricityCostChange}
+              suffix={`${p.currency}/kWh`}
+            />
+            <NumberField
+              fullWidth
+              label="Printer power"
+              value={p.printerPower}
+              onChange={p.onPrinterPowerChange}
+              suffix="kW"
+            />
           </Stack>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
-            <TextField fullWidth label="Electricity rate" type="number" value={p.electricityCost} onChange={onText(p.onElectricityCostChange)}
-              InputProps={{ endAdornment: <InputAdornment position="end">{p.currency}/kWh</InputAdornment> }} />
-            <TextField fullWidth label="Printer power" type="number" value={p.printerPower} onChange={onText(p.onPrinterPowerChange)}
-              InputProps={{ endAdornment: <InputAdornment position="end">kW</InputAdornment> }} />
-          </Stack>
-          <TextField fullWidth label="Filament cost" type="number" value={p.filamentCost} onChange={onText(p.onFilamentCostChange)}
-            sx={{ mt: 2 }}
-            InputProps={{ endAdornment: <InputAdornment position="end">{p.currency}/kg</InputAdornment> }} />
+
+          <NumberField
+            fullWidth
+            label="Filament cost"
+            value={p.filamentCost}
+            onChange={p.onFilamentCostChange}
+            suffix={`${p.currency}/kg`}
+          />
+
           <FormControlLabel
-            sx={{ mt: 2 }}
+            sx={{ mt: 1 }}
             control={<Switch checked={p.showDepreciation} onChange={(_, v) => p.onShowDepreciationChange(v)} />}
             label="Include printer depreciation"
           />
           <Collapse in={p.showDepreciation}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 1 }}>
-              <TextField fullWidth label="Printer cost" type="number" value={p.printerCost} onChange={onText(p.onPrinterCostChange)}
-                InputProps={{ endAdornment: <InputAdornment position="end">{p.currency}</InputAdornment> }} />
-              <TextField fullWidth label="Printer lifespan" type="number" value={p.printerLifespan} onChange={onText(p.onPrinterLifespanChange)}
-                InputProps={{ endAdornment: <InputAdornment position="end">years</InputAdornment> }} />
+              <NumberField
+                fullWidth
+                label="Printer cost"
+                value={p.printerCost}
+                onChange={p.onPrinterCostChange}
+                suffix={p.currency}
+              />
+              <NumberField
+                fullWidth
+                label="Printer lifespan"
+                value={p.printerLifespan}
+                onChange={p.onPrinterLifespanChange}
+                suffix="years"
+                decimal={false}
+              />
             </Stack>
           </Collapse>
         </Box>

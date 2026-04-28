@@ -1,6 +1,6 @@
-import { ChangeEvent } from 'react';
-import { Box, InputAdornment, Paper, TextField, Typography } from '@mui/material';
+import { Paper, Typography } from '@mui/material';
 import TimeInput from '../TimeInput';
+import NumberField from './NumberField';
 
 interface Props {
   printTime: { hours: number; minutes: number };
@@ -12,23 +12,16 @@ interface Props {
 
 const JobInputsCard = ({ printTime, onPrintTimeChange, filamentWeight, onFilamentWeightChange, estimated }: Props) => (
   <Paper sx={{ p: 3 }}>
-    <Typography variant="h2" component="h2" sx={{ mb: 2 }}>This print</Typography>
-    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Total print time</Typography>
+    <Typography variant="h2" component="h2" sx={{ mb: 2 }}>Job</Typography>
     <TimeInput value={printTime} onChange={onPrintTimeChange} />
-    <Box sx={{ mt: 3 }}>
-      <TextField
-        fullWidth
-        label="Filament weight"
-        type="number"
-        value={filamentWeight}
-        onChange={(e: ChangeEvent<HTMLInputElement>) => onFilamentWeightChange(e.target.value)}
-        inputProps={{ min: 0 }}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">g</InputAdornment>,
-        }}
-        helperText={estimated ? '≈ estimated from filament length — verify' : ' '}
-      />
-    </Box>
+    <NumberField
+      fullWidth
+      label="Filament weight"
+      value={filamentWeight}
+      onChange={onFilamentWeightChange}
+      suffix="g"
+      helperText={estimated ? '≈ estimated from filament length — verify' : ' '}
+    />
   </Paper>
 );
 
