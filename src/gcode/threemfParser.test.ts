@@ -96,21 +96,30 @@ describe('parse3mf', () => {
     expect(r.filamentType).toBe('PETG');
   });
 
-  it('returns not_sliced when slice_info.config has no plate elements (newer BambuStudio)', async () => {
+  it('returns ParsedJob with null time/weight when slice_info.config has no plate elements (unsliced project)', async () => {
     const buf = await buildZip({
       'Metadata/slice_info.config': headerOnlyXml,
       'Metadata/project_settings.config': projectSettings(),
     });
     const r = await parse3mf(buf);
-    expect('kind' in r && r.kind).toBe('not_sliced');
+    if ('kind' in r) throw new Error(`unexpected error: ${r.kind}`);
+    expect(r.flavor).toBe('BambuStudio');
+    expect(r.printTime).toBeNull();
+    expect(r.filamentWeightGrams).toBeNull();
+    // printer + filament type still extracted from project_settings
+    expect(r.printerModel).toBe('Bambu Lab X1 Carbon');
+    expect(r.filamentType).toBe('PLA');
   });
 
-  it('returns not_sliced when slice_info.config is absent', async () => {
+  it('returns ParsedJob with null time/weight when slice_info.config is absent', async () => {
     const buf = await buildZip({
       'Metadata/project_settings.config': projectSettings(),
     });
     const r = await parse3mf(buf);
-    expect('kind' in r && r.kind).toBe('not_sliced');
+    if ('kind' in r) throw new Error(`unexpected error: ${r.kind}`);
+    expect(r.printTime).toBeNull();
+    expect(r.filamentWeightGrams).toBeNull();
+    expect(r.printerModel).toBe('Bambu Lab X1 Carbon');
   });
 
   it('returns read_failed for non-zip input', async () => {

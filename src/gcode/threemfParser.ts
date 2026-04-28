@@ -24,53 +24,41 @@ export async function parse3mf(buffer: ArrayBuffer): Promise<ParsedJob | ParseEr
     return { kind: 'read_failed', message: 'Could not read the .3mf file. It may be corrupted.' };
   }
 
-  const sliceInfoFile = zip.file('Metadata/slice_info.config');
-  if (!sliceInfoFile) {
-    return {
-      kind: 'not_sliced',
-      message: "This .3mf hasn't been sliced yet. Open it in BambuStudio, slice it, then drop the file here.",
-    };
-  }
-
-  // slice_info.config is XML (not JSON)
-  const xmlText = await sliceInfoFile.async('string');
-  const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
-  if (doc.querySelector('parsererror')) {
-    return { kind: 'read_failed', message: 'Could not parse slice_info.config inside the .3mf.' };
-  }
-
-  const plates = Array.from(doc.querySelectorAll('plate'));
-  if (plates.length === 0) {
-    return {
-      kind: 'not_sliced',
-      message: 'This .3mf has no sliced plates. Slice it in BambuStudio first.',
-    };
-  }
-
+  // slice_info.config is optional. When present and parseable with <plate> elements,
+  // we extract per-plate prediction (seconds) and weight (grams) and sum across plates.
+  // When absent or empty (unsliced project), we still extract printer/filament/thumbnail
+  // and let the user fill time/weight manually.
   let totalSeconds = 0;
   let totalWeight = 0;
   let filamentType: string | null = null;
 
-  for (const plate of plates) {
-    totalSeconds += parseFloat(metaValue(plate, 'prediction') ?? '0') || 0;
+  const sliceInfoFile = zip.file('Metadata/slice_info.config');
+  if (sliceInfoFile) {
+    const xmlText = await sliceInfoFile.async('string');
+    const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+    if (!doc.querySelector('parsererror')) {
+      const plates = Array.from(doc.querySelectorAll('plate'));
+      for (const plate of plates) {
+        totalSeconds += parseFloat(metaValue(plate, 'prediction') ?? '0') || 0;
 
-    const plateWeight = metaValue(plate, 'weight');
-    if (plateWeight != null) {
-      totalWeight += parseFloat(plateWeight) || 0;
-    } else {
-      // Fallback: sum per-filament used_g attributes
-      const filaments = plate.querySelectorAll('filament');
-      for (let i = 0; i < filaments.length; i++) {
-        totalWeight += parseFloat(filaments[i].getAttribute('used_g') ?? '0') || 0;
+        const plateWeight = metaValue(plate, 'weight');
+        if (plateWeight != null) {
+          totalWeight += parseFloat(plateWeight) || 0;
+        } else {
+          const filaments = plate.querySelectorAll('filament');
+          for (let i = 0; i < filaments.length; i++) {
+            totalWeight += parseFloat(filaments[i].getAttribute('used_g') ?? '0') || 0;
+          }
+        }
+
+        if (!filamentType) {
+          filamentType = plate.querySelector('filament')?.getAttribute('type') ?? null;
+        }
       }
-    }
-
-    if (!filamentType) {
-      filamentType = plate.querySelector('filament')?.getAttribute('type') ?? null;
     }
   }
 
-  // Thumbnail: BambuStudio writes plate_1.png (and plate_no_light_1.png) — pick the first non-empty one
+  // Thumbnail
   let thumbnailDataUrl: string | null = null;
   const thumbCandidates = ['Metadata/plate_1.png', 'Metadata/top_1.png', 'Metadata/plate_no_light_1.png'];
   for (const path of thumbCandidates) {
@@ -83,13 +71,12 @@ export async function parse3mf(buffer: ArrayBuffer): Promise<ParsedJob | ParseEr
     }
   }
 
-  // Printer name from project_settings.config (JSON)
+  // Printer + fallback filament type from project_settings.config
   let printerModel: string | null = null;
   const settingsFile = zip.file('Metadata/project_settings.config');
   if (settingsFile) {
     try {
       const settings: ProjectSettings = JSON.parse(await settingsFile.async('string'));
-      // printer_settings_id e.g. "Bambu Lab X1 Carbon 0.4 nozzle" — strip nozzle suffix
       const raw = settings.printer_settings_id ?? settings.machine_type ?? settings.printer_model_id ?? null;
       printerModel = raw ? raw.replace(/\s+\d+\.?\d*\s*nozzle$/i, '').trim() : null;
       if (!filamentType) filamentType = settings.filament_type?.[0] ?? null;
@@ -100,7 +87,7 @@ export async function parse3mf(buffer: ArrayBuffer): Promise<ParsedJob | ParseEr
 
   return {
     flavor: 'BambuStudio',
-    printTime: toHM(totalSeconds),
+    printTime: totalSeconds > 0 ? toHM(totalSeconds) : null,
     filamentWeightGrams: totalWeight > 0 ? totalWeight : null,
     filamentWeightEstimated: false,
     filamentType,
