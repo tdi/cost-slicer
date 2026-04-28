@@ -8,6 +8,7 @@ const sample: PersistedSettings = {
   showDepreciation: false,
   printerCost: '2800',
   printerLifespan: '5',
+  selectedPrinterId: null,
 };
 
 beforeEach(() => localStorage.clear());

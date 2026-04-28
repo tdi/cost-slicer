@@ -40,6 +40,19 @@ describe('formReducer', () => {
     expect(next.importSource).toBe('PrusaSlicer');
   });
 
+  it('clears selectedPrinterId when printerPower is manually edited', () => {
+    const stateWithPreset: FormState = { ...initialState, printerPower: '0.105', selectedPrinterId: 'bambulab-x1c' };
+    const next = formReducer(stateWithPreset, { type: 'setField', field: 'printerPower', value: '0.200' });
+    expect(next.printerPower).toBe('0.200');
+    expect(next.selectedPrinterId).toBeNull();
+  });
+
+  it('does not clear selectedPrinterId when other fields change', () => {
+    const stateWithPreset: FormState = { ...initialState, selectedPrinterId: 'bambulab-x1c' };
+    const next = formReducer(stateWithPreset, { type: 'setField', field: 'filamentCost', value: '120' });
+    expect(next.selectedPrinterId).toBe('bambulab-x1c');
+  });
+
   it('clearImport resets job-only fields', () => {
     const imported = formReducer(initialState, {
       type: 'import',

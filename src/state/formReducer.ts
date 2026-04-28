@@ -15,6 +15,7 @@ export interface FormState {
   printerCost: string;
   printerLifespan: string;
   importSource: SlicerFlavor | null;
+  selectedPrinterId: string | null;
   thumbnailDataUrl: string | null;
 }
 
@@ -32,6 +33,7 @@ export const initialState: FormState = {
   printerCost: '2800',
   printerLifespan: '5',
   importSource: null,
+  selectedPrinterId: null,
   thumbnailDataUrl: null,
 };
 
@@ -44,8 +46,14 @@ export type FormAction =
 
 export function formReducer(state: FormState, action: FormAction): FormState {
   switch (action.type) {
-    case 'setField':
-      return { ...state, [action.field]: action.value } as FormState;
+    case 'setField': {
+      const next = { ...state, [action.field]: action.value } as FormState;
+      // Manually editing printerPower clears the picked preset.
+      if (action.field === 'printerPower' && action.value !== state.printerPower) {
+        next.selectedPrinterId = null;
+      }
+      return next;
+    }
     case 'setPrintTime':
       return { ...state, printTime: action.value };
     case 'hydrate':
