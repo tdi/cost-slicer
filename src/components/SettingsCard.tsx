@@ -7,6 +7,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Currency } from '../lib/persistence';
 import NumberField from './NumberField';
+import PrinterPicker from './PrinterPicker';
+import { PrinterPreset } from '../printers/types';
+import { resolvePower } from '../printers/power';
 
 interface Props {
   currency: Currency;
@@ -15,6 +18,9 @@ interface Props {
   onElectricityCostChange: (v: string) => void;
   printerPower: string;
   onPrinterPowerChange: (v: string) => void;
+  selectedPrinterId: string | null;
+  onPrinterSelect: (preset: PrinterPreset | null) => void;
+  filamentType: string | null;
   filamentCost: string;
   onFilamentCostChange: (v: string) => void;
   showDepreciation: boolean;
@@ -56,6 +62,16 @@ const SettingsCard = (p: Props) => {
             </ToggleButtonGroup>
           </Box>
 
+          <PrinterPicker
+            selectedId={p.selectedPrinterId}
+            onSelect={(preset) => {
+              p.onPrinterSelect(preset);
+              if (preset) {
+                const watts = resolvePower(preset, p.filamentType);
+                p.onPrinterPowerChange((watts / 1000).toFixed(3));
+              }
+            }}
+          />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <NumberField
               fullWidth

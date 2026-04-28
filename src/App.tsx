@@ -15,6 +15,8 @@ import SettingsCard from './components/SettingsCard';
 import ResultCard from './components/ResultCard';
 import Footer from './components/Footer';
 import { ParseError } from './gcode/types';
+import { findPrinter } from './printers/lookup';
+import { resolvePower } from './printers/power';
 
 const settingsFromState = (s: typeof initialState): PersistedSettings => ({
   electricityCost: s.electricityCost,
@@ -107,7 +109,20 @@ const App = () => {
 
           <Stack spacing={3}>
             <FileDropZone
-              onImport={(job) => { setError(''); dispatch({ type: 'import', payload: job }); }}
+              onImport={(job) => {
+                setError('');
+                dispatch({ type: 'import', payload: job });
+                if (job.printerModel) {
+                  const preset = findPrinter(job.printerModel);
+                  if (preset) {
+                    dispatch({ type: 'setField', field: 'selectedPrinterId', value: preset.id });
+                    const watts = resolvePower(preset, job.filamentType);
+                    dispatch({ type: 'setField', field: 'printerPower', value: (watts / 1000).toFixed(3) });
+                    // setField for printerPower clears selectedPrinterId per the reducer; restore.
+                    dispatch({ type: 'setField', field: 'selectedPrinterId', value: preset.id });
+                  }
+                }
+              }}
               onError={handleParseError}
               imported={importedSummary}
               onClearImport={() => dispatch({ type: 'clearImport' })}
@@ -126,6 +141,9 @@ const App = () => {
               onElectricityCostChange={(v) => dispatch({ type: 'setField', field: 'electricityCost', value: v })}
               printerPower={state.printerPower}
               onPrinterPowerChange={(v) => dispatch({ type: 'setField', field: 'printerPower', value: v })}
+              selectedPrinterId={state.selectedPrinterId}
+              onPrinterSelect={(preset) => dispatch({ type: 'setField', field: 'selectedPrinterId', value: preset?.id ?? null })}
+              filamentType={state.filamentType}
               filamentCost={state.filamentCost}
               onFilamentCostChange={(v) => dispatch({ type: 'setField', field: 'filamentCost', value: v })}
               showDepreciation={state.showDepreciation}
