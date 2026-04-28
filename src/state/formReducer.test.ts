@@ -13,6 +13,7 @@ describe('formReducer', () => {
       payload: {
         electricityCost: '0.30', printerPower: '0.15', filamentCost: '80',
         currency: 'USD', showDepreciation: true, printerCost: '1500', printerLifespan: '4',
+        selectedPrinterId: null,
       },
     });
     expect(next.electricityCost).toBe('0.30');

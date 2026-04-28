@@ -24,6 +24,7 @@ const settingsFromState = (s: typeof initialState): PersistedSettings => ({
   showDepreciation: s.showDepreciation,
   printerCost: s.printerCost,
   printerLifespan: s.printerLifespan,
+  selectedPrinterId: s.selectedPrinterId,
 });
 
 const App = () => {
