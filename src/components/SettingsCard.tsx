@@ -7,6 +7,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Currency } from '../lib/persistence';
 import NumberField from './NumberField';
+import PrinterPicker from './PrinterPicker';
+import { PrinterPreset } from '../printers/types';
+import { resolvePower } from '../printers/power';
 
 interface Props {
   currency: Currency;
@@ -15,6 +18,9 @@ interface Props {
   onElectricityCostChange: (v: string) => void;
   printerPower: string;
   onPrinterPowerChange: (v: string) => void;
+  selectedPrinterId: string | null;
+  onPrinterSelect: (preset: PrinterPreset | null) => void;
+  filamentType: string | null;
   filamentCost: string;
   onFilamentCostChange: (v: string) => void;
   showDepreciation: boolean;
@@ -56,7 +62,34 @@ const SettingsCard = (p: Props) => {
             </ToggleButtonGroup>
           </Box>
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mt: 1 }}>Printer</Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 0.5 }} alignItems="flex-start">
+            <Box sx={{ flex: 2, minWidth: 0, width: '100%' }}>
+              <PrinterPicker
+                selectedId={p.selectedPrinterId}
+                onSelect={(preset) => {
+                  p.onPrinterSelect(preset);
+                  if (preset) {
+                    const watts = resolvePower(preset, p.filamentType);
+                    p.onPrinterPowerChange((watts / 1000).toFixed(3));
+                  }
+                }}
+              />
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+              <NumberField
+                fullWidth
+                label="Power"
+                value={p.printerPower}
+                onChange={p.onPrinterPowerChange}
+                suffix="kW"
+                helperText={p.selectedPrinterId ? 'auto-filled · edit to override' : ' '}
+              />
+            </Box>
+          </Stack>
+
+          <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mt: 1 }}>Costs</Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 0.5 }}>
             <NumberField
               fullWidth
               label="Electricity rate"
@@ -66,20 +99,12 @@ const SettingsCard = (p: Props) => {
             />
             <NumberField
               fullWidth
-              label="Printer power"
-              value={p.printerPower}
-              onChange={p.onPrinterPowerChange}
-              suffix="kW"
+              label="Filament cost"
+              value={p.filamentCost}
+              onChange={p.onFilamentCostChange}
+              suffix={`${p.currency}/kg`}
             />
           </Stack>
-
-          <NumberField
-            fullWidth
-            label="Filament cost"
-            value={p.filamentCost}
-            onChange={p.onFilamentCostChange}
-            suffix={`${p.currency}/kg`}
-          />
 
           <FormControlLabel
             sx={{ mt: 1 }}

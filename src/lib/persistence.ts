@@ -11,6 +11,7 @@ export interface PersistedSettings {
   showDepreciation: boolean;
   printerCost: string;
   printerLifespan: string;
+  selectedPrinterId: string | null;
 }
 
 export function loadSettings(): PersistedSettings | null {
