@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { Box, Button, Chip, Link, Paper, Typography } from '@mui/material';
+import { Box, Button, Chip, Link, Paper, Tooltip, Typography } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { parseGcode } from '../gcode/gcodeParser';
 import { parse3mf } from '../gcode/threemfParser';
@@ -83,12 +83,26 @@ const FileDropZone = ({ onImport, onError, imported, onClearImport }: Props) => 
     return (
       <Paper sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         {imported.thumbnailDataUrl && (
-          <Box
-            component="img"
-            src={imported.thumbnailDataUrl}
-            alt={`${imported.source} preview`}
-            sx={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 1, bgcolor: 'action.hover' }}
-          />
+          <Tooltip
+            title={
+              <Box
+                component="img"
+                src={imported.thumbnailDataUrl}
+                alt=""
+                sx={{ display: 'block', width: 320, height: 320, objectFit: 'contain', borderRadius: 1 }}
+              />
+            }
+            placement="right"
+            arrow
+            slotProps={{ tooltip: { sx: { bgcolor: 'background.paper', boxShadow: 3, p: 1, maxWidth: 'none' } } }}
+          >
+            <Box
+              component="img"
+              src={imported.thumbnailDataUrl}
+              alt={`${imported.source} preview`}
+              sx={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 1, bgcolor: 'action.hover', cursor: 'zoom-in' }}
+            />
+          </Tooltip>
         )}
         <Chip label={imported.source} color="primary" size="small" />
         <Typography variant="body2" sx={{ flex: 1 }}>
