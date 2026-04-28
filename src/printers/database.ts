@@ -55,6 +55,26 @@ export const printers: PrinterPreset[] = [
     power: { Default: 145, PLA: 130, PETG: 140, ABS: 200, PC: 180 },
     enclosed: true,
   },
+  {
+    id: 'bambulab-p2s',
+    producer: 'BambuLab',
+    model: 'P2S',
+    aliases: ['P2S', 'Bambu Lab P2S'],
+    // P2S draws notably more than P1S per community measurements ("~3x current of P1S")
+    // due to PMSM servo extruder and revised heaters.
+    power: { Default: 200, PLA: 180, PETG: 200, ABS: 240, PC: 220 },
+    enclosed: true,
+  },
+  {
+    id: 'bambulab-x2d',
+    producer: 'BambuLab',
+    model: 'X2D',
+    aliases: ['X2D', 'Bambu Lab X2D'],
+    // Dual-nozzle, enclosed; ~170W steady-state PETG per community measurement
+    // (higher than X1C due to extra fans + dual extruders).
+    power: { Default: 170, PLA: 140, PETG: 170, ABS: 220, PC: 200 },
+    enclosed: true,
+  },
 
   // Prusa — community measurements (Original Prusa printers)
   {
